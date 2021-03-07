@@ -55,7 +55,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 //放行失败页面
                 .antMatchers("/failure.html").permitAll()
                 .antMatchers("/js/**").permitAll()
-                .antMatchers("/system/**").permitAll()
+                //.antMatchers("/system/**").permitAll()
                 .antMatchers("/image/**").hasAuthority("admin")
                 //其它请求的访问都需要登录
                 .anyRequest().authenticated();
