@@ -16,19 +16,4 @@ public class SystemController {
     private String failure(){
         return "failure";
     }
-
-    @RequestMapping("/customer")
-    private String customer(){
-        return "customer";
-    }
-
-    @RequestMapping("/role")
-    private String role(){
-        return "role";
-    }
-
-    @RequestMapping("/menu")
-    private String menu(){
-        return "menu";
-    }
 }

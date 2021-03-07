@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<html lang="en" xmlns="http://www.w3.org/1999/html" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
 <head>
     <meta charset="UTF-8">
     <title>权限管理系统</title>
@@ -9,6 +10,6 @@
 <a href="/system/customer">用户管理</a><br/>
 <a href="/system/role">角色管理</a><br/>
 <a href="/system/menu">菜单管理</a><br/>
-<a href="/system/order">订单管理</a>
+<a sec:authorize="hasAuthority('order')" href="/system/order">订单管理</a>
 </body>
 </html>
