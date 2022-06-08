@@ -1,70 +1,106 @@
 package com.spring.security.config;
 
-import com.spring.security.handler.WebAuthenticationFailureHandler;
+import com.spring.security.adapter.SmsSecurityConfigureAdapter;
+import com.spring.security.filter.JsonLoginAuthenticationFilter;
+import com.spring.security.filter.SmsLoginAuthenticationFilter;
 import com.spring.security.handler.WebAuthenticationSuccessHandler;
-import com.spring.security.service.LubanUserDetailsService;
+import com.spring.security.provider.SmsAuthenticationProvider;
+import com.spring.security.service.SmsUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+
+import javax.sql.DataSource;
 
 @Configuration
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    private LubanUserDetailsService lubanUserDetailsService;
+    private WebAuthenticationSuccessHandler webAuthenticationSuccessHandler;
 
     @Autowired
-    private WebAuthenticationSuccessHandler webAuthenticationSuccessHandler;
+    private SmsUserDetailsService smsUserDetailsService;
+
     @Autowired
-    private WebAuthenticationFailureHandler webAuthenticationFailureHandler;
+    private SmsSecurityConfigureAdapter smsSecurityConfigureAdapter;
+
+    @Autowired
+    private DataSource dataSource;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(lubanUserDetailsService);
+        auth.inMemoryAuthentication()
+                .withUser("java")
+                .password("{noop}java")
+                .roles("admin")
+                ;
+    }
+
+ /*   @Override
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }*/
+
+    @Bean
+    public JsonLoginAuthenticationFilter jsonLoginAuthenticationFilter() throws Exception {
+        JsonLoginAuthenticationFilter jsonLoginAuthenticationFilter = new JsonLoginAuthenticationFilter();
+        jsonLoginAuthenticationFilter.setAuthenticationSuccessHandler(webAuthenticationSuccessHandler);
+        //jsonLoginAuthenticationFilter.setAuthenticationManager(authenticationManagerBean());
+        jsonLoginAuthenticationFilter.setAuthenticationManager(authenticationManager());
+        jsonLoginAuthenticationFilter.setFilterProcessesUrl("/customer/login");
+        return jsonLoginAuthenticationFilter;
+    }
+
+    //@Bean
+    public SmsLoginAuthenticationFilter smsLoginAuthenticationFilter() throws Exception {
+        SmsLoginAuthenticationFilter smsLoginAuthenticationFilter = new SmsLoginAuthenticationFilter();
+        smsLoginAuthenticationFilter.setAuthenticationSuccessHandler(webAuthenticationSuccessHandler);
+        smsLoginAuthenticationFilter.setAuthenticationManager(authenticationManager());
+        smsLoginAuthenticationFilter.setFilterProcessesUrl("/sms/login");
+
+        return smsLoginAuthenticationFilter;
+    }
+
+    //@Bean
+    JdbcTokenRepositoryImpl jdbcTokenRepository(){
+        JdbcTokenRepositoryImpl jdbcTokenRepository = new JdbcTokenRepositoryImpl();
+        jdbcTokenRepository.setDataSource(dataSource);
+        return jdbcTokenRepository;
+    }
+
+    /**
+     * JSON登录
+     * @param http
+     * @throws Exception
+     */
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+                .anyRequest().authenticated()
+                .and()
+                .formLogin()
+                //.and()
+                //.rememberMe()
+                //.tokenRepository(jdbcTokenRepository())
+                .and()
+                .csrf().disable();
+        //将LoginFilter添加到UsernamePasswordAuthenticationFilter位置
+        http.addFilterAt(jsonLoginAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        http.apply(smsSecurityConfigureAdapter);
     }
 
     @Override
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
-
-        //表单登录
-        httpSecurity.formLogin()
-                //用户未登录时，访问任何资源都跳转到该页面
-                .loginPage("/login.html")
-                //登录表单提交的action路径
-                .loginProcessingUrl("/login")
-                //自定义登录名参数
-                .usernameParameter("username")
-                //自定义密码参数
-                .passwordParameter("password")
-                //登录成功跳转页面，必须是post请求，针对from表单
-                //.successForwardUrl("/system/index")
-                //登录失败跳转页面，针对from表单
-                //.failureForwardUrl("/system/fail")
-                .successHandler(webAuthenticationSuccessHandler)
-                .failureHandler(webAuthenticationFailureHandler)
-        ;
-        //授权
-        httpSecurity.authorizeRequests()
-                //放行login.html页面
-                .antMatchers("/login.html").permitAll()
-                //放行失败页面
-                .antMatchers("/failure.html").permitAll()
-                .antMatchers("/js/**").permitAll()
-                //.antMatchers("/system/**").permitAll()
-                .antMatchers("/image/**").hasAuthority("admin")
-                //其它请求的访问都需要登录
-                .anyRequest().authenticated();
-
-        httpSecurity.csrf().disable();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring()
+                .antMatchers("/js/**")
+                .antMatchers("/*.html");
     }
 }

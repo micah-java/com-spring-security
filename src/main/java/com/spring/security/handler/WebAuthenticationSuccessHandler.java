@@ -13,9 +13,9 @@ import java.io.PrintWriter;
 @Component
 public class WebAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) throws IOException, ServletException {
-        httpServletResponse.setContentType("application/json;charset=utf-8");
-        PrintWriter writer = httpServletResponse.getWriter();
+    public void onAuthenticationSuccess(HttpServletRequest req, HttpServletResponse rsp, Authentication authentication) throws IOException, ServletException {
+        rsp.setContentType("application/json;charset=utf-8");
+        PrintWriter writer = rsp.getWriter();
         writer.write("{\"code\":\"0000\",\"message\":\"success\"}");
         writer.flush();
         writer.close();

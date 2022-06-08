@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.spring.security.mapper.PermissionMapper">
-    <select id="getPermissionById" parameterType="int" resultType="com.spring.security.entity.Permission">
-		 SELECT * FROM Permission where customer_id = #{customerId}
-	</select>
-</mapper>
