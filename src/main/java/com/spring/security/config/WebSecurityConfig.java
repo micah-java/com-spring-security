@@ -101,6 +101,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                  */
                 .oauth2Login()
                 .loginProcessingUrl("/oauth2/code/github")
+                .successHandler(webAuthenticationSuccessHandler)
                 .and()
                 .csrf().disable();
         //将LoginFilter添加到UsernamePasswordAuthenticationFilter位置
